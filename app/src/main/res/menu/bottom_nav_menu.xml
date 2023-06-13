@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+
+<!--The menu id should be exact the same as the fragments id to navigate in the navGraph-->
+<!--This allows to navigate automatically into the item in the bottom nav-->
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/runFragment"
+        android:icon="@drawable/ic_run"
+        android:title="Your Runs" />
+
+    <item
+        android:id="@+id/statisticsFragment"
+        android:icon="@drawable/ic_graph"
+        android:title="Statistics" />
+
+    <item
+        android:id="@+id/settingsFragment"
+        android:icon="@drawable/ic_settings"
+        android:title="Settings" />
+
+</menu>

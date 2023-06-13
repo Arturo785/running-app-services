@@ -1,0 +1,93 @@
+
+
+
+Service Part
+First we create our service in our Data layer
+
+That service has the functions to create a foreground service, and is has attached a notification
+
+the notification has attached a pending intent with an action attached, we will talk about it later
+
+in the onStartCommand on the service we receive the operations we want to follow depending on the
+parameter received (intent) we communicate through intents and operate our custom logic inside
+
+
+UI part
+The permissions are managed in the first fragment that the user see
+The communication happens in private fun sendCommandToService(action: String): Intent
+the actions sent is defined by us and in our constants file
+and in overall we create an intent and execute it with this  requireContext().startService(it) // triggers the intent
+
+does not really starts the service every time is called
+instead delivers the intent to the service
+sends our command to the service
+
+and in our main activity we manage the pendingIntent of the notification like this
+navigateToTrackingFragmentIfNeeded
+we check if the intent passed has the action if so a global navigation action gets called
+and gets used in here
+
+// this is in case the pending intent gets executed but the activity has not been killed (still in the background)
+    override fun onNewIntent(intent: Intent?)
+
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+
+    // in case the activity was destroyed but our service stills running
+    // like if we close the app in our apps manager (as I usually do)
+    navigateToTrackingFragmentIfNeeded(intent) // intent passed comes from onCreate instance
+
+
+
+Background location part
+
+better done here https://github.com/Arturo785/BackgroundLocationTracking/blob/master/app/src/main/java/com/plcoding/backgroundlocationtracking/MainActivity.kt
+
+but in a nutshell we have
+
+   // our provider of locations from google
+    lateinit var fusedLocationProviderClient: FusedLocationProviderClient
+
+    // our flag to control
+    private var isFirstRun = true
+
+
+    companion object {
+        val isTracking = MutableLiveData<Boolean>()
+        val pathPoints = MutableLiveData<Polylines>()
+    }
+
+And we have a callback that listens for new locations
+in private fun startOurForegroundService() we have
+  isTracking.postValue(true)
+  which has a listener in the same service that we did, reacts to the mutable liveData
+
+  and does this depending on if is tracking or not
+
+      // gets executed inside isTracking liveData observable
+      // we already check for the permission in the if
+      @SuppressLint("MissingPermission")
+      private fun updateLocationTracking(isTracking: Boolean) {
+          if (isTracking) {
+              if (TrackingUtility.hasLocationPermissions(this)) {
+                  // our request from google package
+                  val request = LocationRequest().apply {
+                      // our constants on how fast and how often
+                      interval = LOCATION_UPDATE_INTERVAL
+                      fastestInterval = FASTEST_LOCATION_INTERVAL
+                      priority = PRIORITY_HIGH_ACCURACY
+                  }
+                  // here we register our callback we did
+                  // contains the parameters of how often to search and our callback
+                  fusedLocationProviderClient.requestLocationUpdates(
+                      request,
+                      locationCallback,
+                      Looper.getMainLooper()
+                  )
+              }
+          } else {
+              // if we are not already tracking remove the callback to avoid storing more locations
+              fusedLocationProviderClient.removeLocationUpdates(locationCallback)
+          }
+      }
+
